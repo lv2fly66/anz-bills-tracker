@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ANZ Bills Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #1a2a5e;
+    --navy-dark: #111d45;
+    --navy-mid: #243270;
+    --blue-accent: #3b5bdb;
+    --blue-light: #4c6ef5;
+    --green: #2f9e44;
+    --green-light: #d3f9d8;
+    --green-mid: #40c057;
+    --red: #e03131;
+    --red-light: #fff5f5;
+    --orange: #e67700;
+    --orange-light: #fff9db;
+    --white: #ffffff;
+    --grey-50: #f8f9fa;
+    --grey-100: #f1f3f5;
+    --grey-200: #e9ecef;
+    --grey-400: #ced4da;
+    --grey-600: #868e96;
+    --grey-800: #343a40;
+    --text: #1c2333;
+    --radius: 10px;
+    --shadow: 0 2px 12px rgba(26,42,94,0.10);
+    --shadow-lg: 0 8px 32px rgba(26,42,94,0.15);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--grey-100);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  .header {
+    background: var(--navy);
+    color: white;
+    padding: 0 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 58px;
+    box-shadow: var(--shadow-lg);
+  }
+  .header-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    color: white;
+  }
+  .month-nav {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .month-nav button {
+    background: rgba(255,255,255,0.15);
+    border: none;
+    color: white;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s;
+  }
+  .month-nav button:hover { background: rgba(255,255,255,0.28); }
+  .month-label {
+    font-size: 1.05rem;
+    font-weight: 600;
+    min-width: 130px;
+    text-align: center;
+    letter-spacing: 0.02em;
+  }
+
+  /* SUMMARY CARDS */
+  .summary-bar {
+    display: flex;
+    gap: 16px;
+    padding: 18px 28px 0;
+    flex-wrap: wrap;
+  }
+  .card {
+    background: white;
+    border-radius: var(--radius);
+    padding: 14px 22px;
+    flex: 1;
+    min-width: 150px;
+    box-shadow: var(--shadow);
+    border-top: 3px solid var(--grey-200);
+  }
+  .card.remaining { border-top-color: var(--orange); }
+  .card.paid-card { border-top-color: var(--green); }
+  .card.total-card { border-top-color: var(--blue-accent); }
+  .card-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--grey-600);
+    margin-bottom: 4px;
+  }
+  .card-value {
+    font-size: 1.45rem;
+    font-weight: 700;
+    font-family: 'DM Mono', monospace;
+    color: var(--navy);
+  }
+  .card.remaining .card-value { color: var(--orange); }
+  .card.paid-card .card-value { color: var(--green); }
+  .card-sub {
+    font-size: 0.75rem;
+    color: var(--grey-600);
+    margin-top: 2px;
+  }
+
+  /* PROGRESS BAR */
+  .progress-wrap {
+    padding: 14px 28px 0;
+  }
+  .progress-track {
+    background: var(--grey-200);
+    border-radius: 99px;
+    height: 8px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--green-mid), #51cf66);
+    border-radius: 99px;
+    transition: width 0.4s ease;
+  }
+  .progress-label {
+    text-align: right;
+    font-size: 0.75rem;
+    color: var(--grey-600);
+    margin-top: 4px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* TOOLBAR */
+  .toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 28px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .filter-group {
+    display: flex;
+    gap: 6px;
+  }
+  .filter-btn {
+    padding: 6px 16px;
+    border-radius: 99px;
+    border: 1.5px solid var(--grey-200);
+    background: white;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--grey-800);
+    transition: all 0.15s;
+  }
+  .filter-btn.active, .filter-btn:hover {
+    background: var(--navy);
+    color: white;
+    border-color: var(--navy);
+  }
+  .add-btn {
+    background: var(--blue-accent);
+    color: white;
+    border: none;
+    padding: 8px 18px;
+    border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .add-btn:hover { background: var(--blue-light); }
+
+  /* TABLE */
+  .table-wrap {
+    padding: 0 28px 32px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  thead tr {
+    background: var(--navy);
+    color: white;
+  }
+  thead th {
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+  }
+  tbody tr {
+    border-bottom: 1px solid var(--grey-100);
+    transition: background 0.2s;
+  }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--grey-50); }
+  tbody tr.paid-row { background: var(--green-light) !important; }
+  tbody tr.paid-row:hover { background: #c8f5ce !important; }
+
+  td {
+    padding: 11px 16px;
+    font-size: 0.875rem;
+    vertical-align: middle;
+  }
+
+  /* VENDOR NAME */
+  .vendor-name { font-weight: 500; }
+
+  /* DUE DATE */
+  .due-date-cell { color: var(--grey-800); font-family: 'DM Mono', monospace; font-size: 0.82rem; cursor: pointer; white-space: nowrap; }
+  .due-date-cell:hover { color: var(--blue-accent); text-decoration: underline dotted; }
+  .due-date-input {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.82rem;
+    border: 1.5px solid var(--blue-accent);
+    border-radius: 6px;
+    padding: 3px 7px;
+    outline: none;
+    background: white;
+    width: 140px;
+  }
+
+  /* AMOUNT */
+  .amount-cell {
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+    font-size: 0.9rem;
+    text-align: right;
+  }
+  .amount-input {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.88rem;
+    width: 90px;
+    border: 1.5px solid var(--grey-400);
+    border-radius: 6px;
+    padding: 4px 8px;
+    text-align: right;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .amount-input:focus { border-color: var(--blue-accent); }
+
+  /* DATE PAID */
+  .date-paid-input {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.82rem;
+    border: 1.5px solid var(--grey-400);
+    border-radius: 6px;
+    padding: 4px 8px;
+    outline: none;
+    transition: border-color 0.15s;
+    width: 140px;
+    background: white;
+  }
+  .date-paid-input:focus { border-color: var(--green-mid); }
+  .paid-row .date-paid-input { background: transparent; border-color: var(--green-mid); }
+
+  /* STATUS */
+  .mark-paid-btn {
+    background: var(--green);
+    color: white;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+    white-space: nowrap;
+  }
+  .mark-paid-btn:hover { background: #27883b; }
+  .paid-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--green);
+    color: white;
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+  .undo-btn {
+    background: white;
+    color: var(--grey-800);
+    border: 1.5px solid var(--grey-400);
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.78rem;
+    cursor: pointer;
+    margin-left: 6px;
+    transition: all 0.15s;
+  }
+  .undo-btn:hover { border-color: var(--red); color: var(--red); }
+
+  /* DELETE */
+  .delete-btn {
+    background: none;
+    border: none;
+    color: var(--grey-400);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 4px 6px;
+    border-radius: 4px;
+    transition: color 0.15s;
+    line-height: 1;
+  }
+  .delete-btn:hover { color: var(--red); }
+
+  /* DASH */
+  .dash { color: var(--grey-400); }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: white;
+    border-radius: 14px;
+    padding: 28px;
+    width: 360px;
+    box-shadow: var(--shadow-lg);
+  }
+  .modal h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 18px; color: var(--navy); }
+  .modal label { font-size: 0.8rem; font-weight: 600; color: var(--grey-600); display: block; margin-bottom: 4px; margin-top: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .modal input {
+    width: 100%;
+    border: 1.5px solid var(--grey-200);
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .modal input:focus { border-color: var(--blue-accent); }
+  .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+  .modal-actions button { flex: 1; padding: 10px; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.88rem; font-weight: 600; cursor: pointer; border: none; }
+  .btn-primary { background: var(--blue-accent); color: white; }
+  .btn-primary:hover { background: var(--blue-light); }
+  .btn-cancel { background: var(--grey-100); color: var(--grey-800); }
+  .btn-cancel:hover { background: var(--grey-200); }
+
+  /* CONFIRM */
+  .confirm-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+  .confirm-overlay.open { display: flex; }
+  .confirm-box {
+    background: white;
+    border-radius: 14px;
+    padding: 28px;
+    width: 320px;
+    box-shadow: var(--shadow-lg);
+    text-align: center;
+  }
+  .confirm-box p { font-size: 0.95rem; margin-bottom: 20px; color: var(--text); }
+  .confirm-box strong { color: var(--navy); }
+  .confirm-actions { display: flex; gap: 10px; }
+  .btn-danger { background: var(--red); color: white; flex: 1; padding: 10px; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.88rem; font-weight: 600; cursor: pointer; border: none; }
+  .btn-danger:hover { background: #c92a2a; }
+
+  @media (max-width: 600px) {
+    .header, .summary-bar, .progress-wrap, .toolbar, .table-wrap { padding-left: 12px; padding-right: 12px; }
+    .card-value { font-size: 1.1rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <span class="header-title">ANZ Bills Tracker</span>
+  <div class="month-nav">
+    <button id="prevBtn">&#8592;</button>
+    <span class="month-label" id="monthLabel"></span>
+    <button id="nextBtn">&#8594;</button>
+  </div>
+</div>
+
+<div class="summary-bar">
+  <div class="card total-card">
+    <div class="card-label">Total Due</div>
+    <div class="card-value" id="totalDue">$0.00</div>
+    <div class="card-sub" id="totalCount">0 bills</div>
+  </div>
+  <div class="card paid-card">
+    <div class="card-label">Total Paid</div>
+    <div class="card-value" id="totalPaid">$0.00</div>
+    <div class="card-sub" id="paidCount">0 paid</div>
+  </div>
+  <div class="card remaining">
+    <div class="card-label">Remaining</div>
+    <div class="card-value" id="totalRemaining">$0.00</div>
+    <div class="card-sub" id="remainingCount">0 outstanding</div>
+  </div>
+</div>
+
+<div class="progress-wrap">
+  <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  <div class="progress-label" id="progressLabel">0%</div>
+</div>
+
+<div class="toolbar">
+  <div class="filter-group">
+    <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+    <button class="filter-btn" onclick="setFilter('unpaid',this)">Unpaid</button>
+    <button class="filter-btn" onclick="setFilter('paid',this)">Paid</button>
+  </div>
+  <button class="add-btn" onclick="openAddModal()">+ Add Vendor</button>
+</div>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Vendor</th>
+        <th>Due Date</th>
+        <th style="text-align:right">Amount</th>
+        <th>Date Paid</th>
+        <th>Status</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody id="billsBody"></tbody>
+  </table>
+</div>
+
+<!-- Add Vendor Modal -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <h3>Add Vendor</h3>
+    <label>Vendor Name</label>
+    <input type="text" id="newVendor" placeholder="e.g. Spotify">
+    <label>Amount ($)</label>
+    <input type="number" id="newAmount" placeholder="0.00" step="0.01" min="0">
+    <label>Due Date</label>
+    <input type="date" id="newDueDate">
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeAddModal()">Cancel</button>
+      <button class="btn-primary" onclick="addVendor()">Add</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Delete -->
+<div class="confirm-overlay" id="confirmModal">
+  <div class="confirm-box">
+    <p>Delete <strong id="confirmVendorName"></strong>?</p>
+    <div class="confirm-actions">
+      <button class="btn-cancel" onclick="closeConfirm()">Cancel</button>
+      <button class="btn-danger" onclick="confirmDelete()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── DEFAULT VENDORS ──────────────────────────────────────────────
+const DEFAULT_VENDORS = [
+  { name: 'Crunch',                     amount: 25.00,  dueDay: 1  },
+  { name: 'Adobe 100GB Plan',           amount: 54.00,  dueDay: 5  },
+  { name: 'Microsoft 365',              amount: 18.00,  dueDay: 5  },
+  { name: 'TPG',                        amount: 94.99,  dueDay: 5  },
+  { name: 'Vodafone',                   amount: 116.49, dueDay: 7  },
+  { name: 'Crunch 2',                   amount: 24.90,  dueDay: 8  },
+  { name: 'Claude',                     amount: 35.00,  dueDay: 15 },
+  { name: 'Credit Card',                amount: 165.00, dueDay: 17 },
+  { name: 'Cricut',                     amount: 14.00,  dueDay: 17 },
+  { name: 'Google Cloud Storage',       amount: 14.99,  dueDay: 18 },
+  { name: 'Google AI Pro',              amount: 32.99,  dueDay: 21 },
+  { name: 'Microsoft Storage',          amount: 3.00,   dueDay: 21 },
+  { name: 'Medibank / AHM Direct Debit',amount: 223.12, dueDay: 23 },
+  { name: 'Apple Music',                amount: 12.99,  dueDay: 24 },
+  { name: 'Canva',                      amount: 20.00,  dueDay: 27 },
+  { name: 'iCloud',                     amount: 1.49,   dueDay: 28 },
+  { name: 'Crunch 3',                   amount: 24.90,  dueDay: 28 },
+  { name: 'YouTube',                    amount: 16.99,  dueDay: 28 },
+  { name: 'Evernote',                   amount: 22.99,  dueDay: 28 },
+  { name: 'Netflix',                    amount: 20.99,  dueDay: 28 },
+  { name: 'Televr',                     amount: 11.05,  dueDay: 29 },
+];
+
+// ── STATE ─────────────────────────────────────────────────────────
+let currentYear, currentMonth; // 0-indexed month
+let filter = 'all';
+let deleteTarget = null;
+
+// ── DUE DAY OVERRIDES ─────────────────────────────────────────────
+// Stores { vendorName: { dueDay, effectiveFrom: "YYYY-MM" } }
+function loadDueDayOverrides() {
+  const saved = localStorage.getItem('anz_dueDayOverrides');
+  return saved ? JSON.parse(saved) : {};
+}
+function saveDueDayOverrides(overrides) {
+  localStorage.setItem('anz_dueDayOverrides', JSON.stringify(overrides));
+}
+function getEffectiveDueDay(vendorName, defaultDay, y, m) {
+  const ym = `${y}-${String(m + 1).padStart(2, '0')}`;
+  const override = loadDueDayOverrides()[vendorName];
+  return (override && override.effectiveFrom <= ym) ? override.dueDay : defaultDay;
+}
+
+function storageKey(y, m) {
+  return `anz_bills_${y}_${String(m+1).padStart(2,'0')}`;
+}
+
+function formatDate(d) {
+  // Returns DD/MM/YYYY
+  const dd = String(d.getDate()).padStart(2,'0');
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  return `${dd}/${mm}/${d.getFullYear()}`;
+}
+
+function toInputDate(ddmmyyyy) {
+  // DD/MM/YYYY -> YYYY-MM-DD
+  if (!ddmmyyyy) return '';
+  const [d,m,y] = ddmmyyyy.split('/');
+  return `${y}-${m}-${d}`;
+}
+
+function fromInputDate(yyyymmdd) {
+  // YYYY-MM-DD -> DD/MM/YYYY
+  if (!yyyymmdd) return '';
+  const [y,m,d] = yyyymmdd.split('-');
+  return `${d}/${m}/${y}`;
+}
+
+// ── LOAD / SAVE ───────────────────────────────────────────────────
+function loadMonth(y, m) {
+  const key = storageKey(y, m);
+  const saved = localStorage.getItem(key);
+  if (saved) return JSON.parse(saved);
+
+  // Try to carry over amounts from previous month
+  const prevM = m === 0 ? 11 : m - 1;
+  const prevY = m === 0 ? y - 1 : y;
+  const prevKey = storageKey(prevY, prevM);
+  const prevSaved = localStorage.getItem(prevKey);
+
+  let prevAmounts = {};
+  if (prevSaved) {
+    JSON.parse(prevSaved).forEach(b => { prevAmounts[b.name] = b.amount; });
+  }
+
+  // Build fresh month from defaults, using prev amounts and any due-day overrides
+  return DEFAULT_VENDORS.map(v => {
+    const dueDay = getEffectiveDueDay(v.name, v.dueDay, y, m);
+    const dueDate = formatDate(new Date(y, m, dueDay));
+    const amount = prevAmounts[v.name] !== undefined ? prevAmounts[v.name] : v.amount;
+    return { name: v.name, dueDay, dueDate, amount, datePaid: '', paid: false };
+  });
+}
+
+function saveMonth(y, m, bills) {
+  localStorage.setItem(storageKey(y, m), JSON.stringify(bills));
+}
+
+// ── RENDER ────────────────────────────────────────────────────────
+function render() {
+  const bills = loadMonth(currentYear, currentMonth);
+
+  // Month label
+  const monthNames = ['January','February','March','April','May','June',
+                      'July','August','September','October','November','December'];
+  document.getElementById('monthLabel').textContent = `${monthNames[currentMonth]} ${currentYear}`;
+
+  // Summaries
+  let totalDue = 0, totalPaid = 0, paidCount = 0;
+  bills.forEach(b => {
+    if (b.amount) totalDue += parseFloat(b.amount) || 0;
+    if (b.paid && b.amount) { totalPaid += parseFloat(b.amount) || 0; paidCount++; }
+  });
+  const remaining = totalDue - totalPaid;
+  const unpaidCount = bills.filter(b => !b.paid).length;
+
+  document.getElementById('totalDue').textContent = `$${totalDue.toFixed(2)}`;
+  document.getElementById('totalPaid').textContent = `$${totalPaid.toFixed(2)}`;
+  document.getElementById('totalRemaining').textContent = `$${remaining.toFixed(2)}`;
+  document.getElementById('totalCount').textContent = `${bills.length} bills`;
+  document.getElementById('paidCount').textContent = `${paidCount} paid`;
+  document.getElementById('remainingCount').textContent = `${unpaidCount} outstanding`;
+
+  const pct = bills.length ? Math.round((paidCount / bills.length) * 100) : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = pct + '%';
+
+  // Table
+  const tbody = document.getElementById('billsBody');
+  tbody.innerHTML = '';
+
+  bills.forEach((b, i) => {
+    if (filter === 'paid' && !b.paid) return;
+    if (filter === 'unpaid' && b.paid) return;
+
+    const tr = document.createElement('tr');
+    if (b.paid) tr.classList.add('paid-row');
+
+    const amtDisplay = b.amount ? `$${parseFloat(b.amount).toFixed(2)}` : '—';
+
+    tr.innerHTML = `
+      <td class="vendor-name">${b.name}</td>
+      <td class="due-date-cell" onclick="editDueDate(this, ${i})" title="Click to edit due date">${b.dueDate || '—'}</td>
+      <td class="amount-cell">
+        <input class="amount-input" type="number" value="${b.amount || ''}" placeholder="—"
+          step="0.01" min="0" onchange="updateAmount(${i}, this.value)">
+      </td>
+      <td>
+        <input class="date-paid-input" type="date"
+          value="${toInputDate(b.datePaid)}"
+          onchange="onDateChange(${i}, this.value)">
+      </td>
+      <td>
+        ${b.paid
+          ? `<span class="paid-badge">✓ Paid</span>
+             <button class="undo-btn" onclick="undoPaid(${i})">Undo</button>`
+          : `<button class="mark-paid-btn" onclick="markPaid(${i})">Mark Paid</button>`
+        }
+      </td>
+      <td><button class="delete-btn" onclick="openConfirm(${i}, '${b.name.replace(/'/g,"\\'")}')">✕</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// ── ACTIONS ───────────────────────────────────────────────────────
+function markPaid(i) {
+  const bills = loadMonth(currentYear, currentMonth);
+  bills[i].paid = true;
+  if (!bills[i].datePaid) bills[i].datePaid = formatDate(new Date());
+  saveMonth(currentYear, currentMonth, bills);
+  render();
+}
+
+function undoPaid(i) {
+  const bills = loadMonth(currentYear, currentMonth);
+  bills[i].paid = false;
+  bills[i].datePaid = '';
+  saveMonth(currentYear, currentMonth, bills);
+  render();
+}
+
+function onDateChange(i, val) {
+  const bills = loadMonth(currentYear, currentMonth);
+  bills[i].datePaid = fromInputDate(val);
+  // If a date is entered, mark as paid; if cleared, mark unpaid
+  bills[i].paid = !!val;
+  saveMonth(currentYear, currentMonth, bills);
+  render();
+}
+
+function updateAmount(i, val) {
+  const bills = loadMonth(currentYear, currentMonth);
+  bills[i].amount = parseFloat(val) || 0;
+  saveMonth(currentYear, currentMonth, bills);
+  render();
+}
+
+function setFilter(f, btn) {
+  filter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+// ── MONTH NAV ─────────────────────────────────────────────────────
+document.getElementById('prevBtn').onclick = () => {
+  if (currentMonth === 0) { currentMonth = 11; currentYear--; }
+  else currentMonth--;
+  render();
+};
+document.getElementById('nextBtn').onclick = () => {
+  if (currentMonth === 11) { currentMonth = 0; currentYear++; }
+  else currentMonth++;
+  render();
+};
+
+// ── ADD VENDOR ────────────────────────────────────────────────────
+function openAddModal() { document.getElementById('addModal').classList.add('open'); }
+function closeAddModal() {
+  document.getElementById('addModal').classList.remove('open');
+  document.getElementById('newVendor').value = '';
+  document.getElementById('newAmount').value = '';
+  document.getElementById('newDueDate').value = '';
+}
+function addVendor() {
+  const name = document.getElementById('newVendor').value.trim();
+  const amount = parseFloat(document.getElementById('newAmount').value) || 0;
+  const dueDateInput = document.getElementById('newDueDate').value;
+  if (!name) { alert('Please enter a vendor name.'); return; }
+  const dueDate = dueDateInput ? fromInputDate(dueDateInput) : '';
+  const dueDay = dueDateInput ? new Date(dueDateInput).getDate() : 1;
+  const bills = loadMonth(currentYear, currentMonth);
+  bills.push({ name, dueDay, dueDate, amount, datePaid: '', paid: false });
+  saveMonth(currentYear, currentMonth, bills);
+  closeAddModal();
+  render();
+}
+
+// ── EDIT DUE DATE ─────────────────────────────────────────────────
+function editDueDate(cell, i) {
+  const bills = loadMonth(currentYear, currentMonth);
+  const b = bills[i];
+  const originalValue = toInputDate(b.dueDate);
+
+  const input = document.createElement('input');
+  input.type = 'date';
+  input.value = originalValue;
+  input.className = 'due-date-input';
+  cell.textContent = '';
+  cell.appendChild(input);
+  input.focus();
+
+  let committed = false;
+  function commit() {
+    if (committed) return;
+    committed = true;
+    if (input.value && input.value !== originalValue) {
+      const newDay = parseInt(input.value.split('-')[2], 10);
+      bills[i].dueDate = fromInputDate(input.value);
+      bills[i].dueDay = newDay;
+      saveMonth(currentYear, currentMonth, bills);
+      // Persist override so future unsaved months use the new day
+      const ym = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
+      const overrides = loadDueDayOverrides();
+      overrides[b.name] = { dueDay: newDay, effectiveFrom: ym };
+      saveDueDayOverrides(overrides);
+    }
+    render();
+  }
+  input.addEventListener('blur', commit);
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') input.blur();
+    if (e.key === 'Escape') { committed = true; render(); }
+  });
+}
+
+// ── DELETE ────────────────────────────────────────────────────────
+function openConfirm(i, name) {
+  deleteTarget = i;
+  document.getElementById('confirmVendorName').textContent = name;
+  document.getElementById('confirmModal').classList.add('open');
+}
+function closeConfirm() {
+  deleteTarget = null;
+  document.getElementById('confirmModal').classList.remove('open');
+}
+function confirmDelete() {
+  if (deleteTarget === null) return;
+  const bills = loadMonth(currentYear, currentMonth);
+  bills.splice(deleteTarget, 1);
+  saveMonth(currentYear, currentMonth, bills);
+  closeConfirm();
+  render();
+}
+
+// ── INIT ──────────────────────────────────────────────────────────
+const now = new Date();
+currentYear = now.getFullYear();
+currentMonth = now.getMonth();
+render();
+</script>
+</body>
+</html>
